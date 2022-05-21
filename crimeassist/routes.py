@@ -1,3 +1,4 @@
+from importlib.resources import path
 import os
 from datetime import date
 from flask_table import Table, Col
@@ -84,6 +85,7 @@ def account():
     if form.validate_on_submit():
         if form.picture.data:
             picture_file  = save_picture(form.picture.data)
+            img = current_user.image_file
             current_user.image_file  = picture_file
         current_user.username = form.username.data
         current_user.email = form.email.data
@@ -99,6 +101,9 @@ def account():
         else:
             flash("Please fill both fields in Update Password.",'info')
             return redirect(url_for('account'))
+        loc = "D:\Flask\crimeassist\static\profile_pics"
+        path1 = os.path.join(loc,img)
+        os.remove(path1)
         db.session.commit()
         flash('Your account has been updated', 'success')
         return redirect(url_for('account'))
@@ -161,16 +166,25 @@ def updateConvictInfo(convict_id):
     return render_template('updateConvictInfo.html',title='Update Info', form=form)
 
 
-
-
 @app.route('/deleteConvict/<int:convict_id>', methods=['POST', 'GET'])
 @login_required
 def deleteConvict(convict_id):
     convict = Convict.query.get_or_404(convict_id)
-    convict_imgs = ConvictImage.query.get_or_404(convict.id)
+    convict_img = ConvictImage.query.get_or_404(convict.id)
     db.session.delete(convict)
-    db.session.delete(convict_imgs)
-    db.session.commit()
+    db.session.delete(convict_img)
+    img1 = convict_img.image_file
+    img2 = convict.profile_image
+    loc = "D:\Flask\crimeassist\static\convict_pics"
+    if img1 == img2 :
+        path1 = os.path.join(loc,img1)
+        os.remove(path1)
+    else:
+        path1 = os.path.join(loc,img1)
+        os.remove(path1)
+        path2 = os.path.join(loc,img2)
+        os.remove(path2)
+    db.session.commit() 
     flash('Convict Profile Deleted successfully!','success')
     return redirect(url_for('update'))
 
