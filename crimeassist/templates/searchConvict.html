@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<!-- search bar  -->
+<div class="search-bar">
+    <form action="" method="POST">
+      {{ form.hidden_tag() }}
+      <fieldset >
+        <div class="form-group">
+            {% if form.search_using.errors %}
+              {{ form.search_using(class="form-control form-control-md is-invalid") }}
+              <div class="invalid-feedback">
+                {% for error in form.search_using.errors %}
+                  <span>{{ error }}</span>
+                {% endfor %}
+              </div>
+            {% else %}
+              {{ form.search_using(class="form-control form-control-md border-dark") }}
+            {% endif %}  
+            </div> 
+          <div class="form-group">
+            {% if form.search.errors %}
+              {{ form.search(class="form-control form-control-md is-invalid") }}
+              <div class="invalid-feedback">
+                {% for error in form.search.errors %}
+                  <span>{{ error }}</span>
+                {% endfor %}
+              </div>
+            {% else %}
+              {{ form.search(class="form-control form-control-md border-dark") }}
+            {% endif %}  
+            </div> 
+
+            <div class="form-group">
+                {% if form.submit.errors %}
+                  {{ form.submit(class="form-control form-control-md is-invalid") }}
+                  <div class="invalid-feedback">
+                    {% for error in form.submit.errors %}
+                      <span>{{ error }}</span>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  {{ form.submit(class="form-control form-control-md border-dark") }}
+                {% endif %}  
+                </div> 
+
+<!-- Search results -->
+
+    {%  if not convicts  %}
+        <div class="search-convicts">
+            <h3 class="bg-primary"> No search results </h3>
+            <p> Kindly search with another keyword.</p>
+        </div>  
+    {% else %}
+        {% for convict in convicts %} 
+            <div class="search-convicts">
+                <h3 class="bg-primary">{{ convict.name }} <h5 class="bg-success">[ID - {{ convict.id }} ]</h5></h3>
+                <h6>D.O.B - ( {{ convict.dob }} )</h6>
+                <p>Crimes -[ {{ convict.crimes }} ]</p>
+                <img src="{{ url_for('static',filename = 'convict_pics/'+ convict.profile_image ) }}" alt="Photo here">
+            </div>
+        {% endfor %}
+    {%  endif    %}
+   
+{% endblock content %}

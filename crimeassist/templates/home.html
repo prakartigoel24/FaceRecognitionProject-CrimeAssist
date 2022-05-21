@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row mt-4">
+  <div class="col-lg-4 col-md-6 mb-5">
+    <div class="card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title">ADD NEW CONVICT</h5>
+        <img src="https://i.ibb.co/cv1QTcN/criminal.jpg" alt="criminal" border="0"></a> <br>
+        <a href="{{ url_for('addConvict') }}" class="btn btn-primary homebtns">Add</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 col-md-6 mb-5">
+    <div class="card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title">SEARCH FOR CONVICT</h5>
+        <img src="https://i.ibb.co/dm7J0wd/Searchdb.jpg" alt="Searchdb" border="0"></a><br>
+        <a href="{{ url_for('searchConvict')}}" class="btn btn-primary homebtns">Search</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 col-md-6 mb-5">
+    <div class="card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title">UPDATE DATABASE</h5>
+        <img src="https://i.ibb.co/H4mTzcr/updatedb.jpg" alt="updatedb" border="0"></a><br>
+        <a href="{{ url_for('update') }}" class="btn btn-primary homebtns">Update</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 col-md-6 mb-5">
+    <div class="card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title">SHOW CONVICTS</h5>
+        <img src="https://i.ibb.co/cgJHvSs/showlist.jpg" alt="showlist" border="0"></a>        <br>
+        <a href="{{ url_for('showConvicts') }}" class="btn btn-primary homebtns">Show</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+
+
+{% endblock content %}
