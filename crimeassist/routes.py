@@ -87,6 +87,9 @@ def account():
             picture_file  = save_picture(form.picture.data)
             img = current_user.image_file
             current_user.image_file  = picture_file
+            loc = "D:\Flask\crimeassist\static\profile_pics"
+            path1 = os.path.join(loc,img)
+            os.remove(path1)
         current_user.username = form.username.data
         current_user.email = form.email.data
         if form.password.data and form.confirm_password.data:
@@ -101,9 +104,7 @@ def account():
         else:
             flash("Please fill both fields in Update Password.",'info')
             return redirect(url_for('account'))
-        loc = "D:\Flask\crimeassist\static\profile_pics"
-        path1 = os.path.join(loc,img)
-        os.remove(path1)
+        
         db.session.commit()
         flash('Your account has been updated', 'success')
         return redirect(url_for('account'))
@@ -125,7 +126,7 @@ def addConvict():
             newconvict = Convict(name = form.name.data,crimes = form.crimes.data,dob = form.dob.data ,profile_image = picture_file)
             db.session.add(newconvict)
             db.session.commit()
-            convImg = ConvictImage(person_id = newconvict.id,image_file=picture_file)
+            convImg = ConvictImage(person=newconvict,image_file=picture_file)
             db.session.add(convImg)
             db.session.commit()
             flash('Convict added successfully!', 'success')  
@@ -152,6 +153,11 @@ def updateConvictInfo(convict_id):
         if form.profile_image.data:
             picture_file  = save_convict_picture(form.profile_image.data)
             convict.profile_image=picture_file
+            img = ConvictImage.query.get_or_404(convict.id)
+            loc = "D:\Flask\crimeassist\static\convict_pics"
+            path1 = os.path.join(loc,img.image_file)
+            os.remove(path1)
+            img.image_file = picture_file            
         convict.name = form.name.data
         convict.crimes = form.crimes.data
         convict.dob = form.dob.data
