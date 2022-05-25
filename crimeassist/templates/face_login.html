@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+
+<h4 id ="head-text" style="background:white; text-align:center;"> FACE LOGIN </h4>
+<h5 style="background:white; text-align:center;"> Please stay still and make sure your whole face is visible before clicking Log In </h5>
+<h6 style="background:lightcyan; text-align:center;"> (wait for webcam to open...) </h6>
+<div class="video-feed-class">
+
+    <img src="{{ url_for('video_feed_login', user_email=user_email)  }}" alt="Video here">
+    
+</div>
+
+<div class="btn-pos">
+
+  <a href="{{ url_for('try_face_login', user_email = user_email) }}" class="btn btn-light">Log In</a>
+
+</div>
+
+{% endblock content%}
+ 

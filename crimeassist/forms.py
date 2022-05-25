@@ -104,3 +104,6 @@ class SearchForm(FlaskForm):
     search = StringField('Search')
     submit  = SubmitField('Search')
 
+class FaceLoginForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(),Email()])
+    submit  = SubmitField('Submit')

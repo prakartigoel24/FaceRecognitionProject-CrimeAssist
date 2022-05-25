@@ -40,6 +40,7 @@
           <!-- Navbar Right Side -->
           <div class="navbar-nav">
             {% if current_user.is_authenticated %}
+            <a class="nav-item nav-link" href="/face_login_setup">Face-Login-Setup</a>
             <a class="nav-item nav-link" href="/account">Account</a>
             <a class="nav-item nav-link" href="/logout">Logout</a>
             {% else %}

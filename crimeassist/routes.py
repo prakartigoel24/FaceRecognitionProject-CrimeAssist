@@ -1,18 +1,60 @@
-from importlib.resources import path
-import os
+import cv2
+import numpy as np
+import os, time
 from datetime import date
 from flask_table import Table, Col
 import secrets
 from PIL import Image
 import email
-from flask import Flask, flash,request
+import face_recognition
+from flask import Flask, flash,request, Response
 from flask import redirect,url_for,render_template,request
 from crimeassist import app,db,bcrypt
 from crimeassist.forms import*
 from crimeassist.models import*
 from flask_login import login_user,current_user,logout_user,login_required
 
+user_face_encodings = []
+present_ids = []
 
+def generate_user_setup_encoding():
+    folder = "D:\Flask\crimeassist\static\profile_pics"
+    list_of_images = os.listdir(folder)
+
+    for imgName in list_of_images:
+        currImg = face_recognition.load_image_file(f'{folder}/{imgName}')
+        new_id = imgName.split('.')
+        present_ids.append(new_id[0])
+        img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
+        face_locations = face_recognition.face_locations(img)
+        if face_locations:
+            currImgEncodings = face_recognition.face_encodings(img, face_locations, num_jitters=3, model="large")[0]
+            user_face_encodings.append(currImgEncodings)
+
+
+generate_user_setup_encoding()
+
+def generate_img(cam, label, foldername):
+    while True:
+        # Grab a single frame of video
+        success, frame = cam.read()
+
+        if not success:
+            print("oops ! something went wrong")
+            break
+        else:
+            output_size = (125,125)
+            imgname = str(label) + '.jpg'
+            path = os.path.join('crimeassist\static',foldername)
+            path = os.path.join(path, imgname)
+            cv2.imwrite(path, frame)
+            ret, imgbuffer = cv2.imencode('.jpg',frame)
+            frame=imgbuffer.tobytes()
+            
+            yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+     
+    
 @app.route('/', methods=['POST', 'GET'])
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -29,6 +71,77 @@ def login():
         else:
             flash('login unsuccesful! Please check email and password.','danger')
     return  render_template('login.html' , form=form , title='Login Form')
+
+@app.route('/face_login_setup', methods=['POST', 'GET'])
+@login_required
+def face_login_setup():
+    return render_template('face_login_setup.html')
+
+@app.route('/video_feed', methods=['POST', 'GET'])
+@login_required
+def video_feed():
+    cam = cv2.VideoCapture(0)
+    return Response(generate_img(cam, current_user.id,foldername='profile_pics'), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/video_feed_login/<user_email>', methods=['POST', 'GET'])
+def video_feed_login(user_email):
+    cam = cv2.VideoCapture(0)
+    return Response(generate_img(cam,user_email,foldername='login_user_images'), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/goto_facelogin/<user_email>')
+def goto_facelogin(user_email):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    
+    return render_template('face_login.html', user_email = user_email)
+
+@app.route('/face_login', methods=['POST', 'GET'])
+def face_login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form  = FaceLoginForm()
+    if form.validate_on_submit():  
+        user_email = form.email.data
+        return redirect(url_for('goto_facelogin', user_email= str(user_email))) 
+    
+    return render_template('emailpage.html', form=form)
+
+@app.route('/try_face_login/<user_email>')
+def try_face_login(user_email):
+    tryimageloc =f'crimeassist\static\login_user_images\{user_email}.jpg' 
+    currImg = face_recognition.load_image_file(tryimageloc)
+    img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB) 
+    face_locations = face_recognition.face_locations(img)
+    if face_locations:
+        currImgEncodings = face_recognition.face_encodings(img, face_locations, num_jitters=3, model="large")
+    else:
+        flash(' Face not detected ! Try again.', 'info')
+        return redirect(url_for('face_login'))
+
+    for face_encoding in currImgEncodings:
+        matches = face_recognition.compare_faces(user_face_encodings, face_encoding,tolerance=0.3)
+        face_distances = face_recognition.face_distance(user_face_encodings, face_encoding)
+        best_match_index = np.argmin(face_distances)
+        if matches[best_match_index]:
+            id = present_ids[best_match_index]
+            user = User.query.filter_by(id = id).first()
+            if user.email == user_email:
+                login_user(user,remember = True)
+                flash('Login successful!','success')
+                return redirect(url_for('home'))
+            else:
+                flash('Face match invalid, please login through Email and pass', 'info')
+                return redirect(url_for('login'))
+        else:
+            flash('Invalid face login. Please login through Email and pass', 'info')
+            return redirect(url_for('login'))
+
+
+@app.route('/stop', methods=['POST', 'GET'])
+@login_required
+def stop():
+    flash('Image successfully captured! You can now Login using Face Login.', 'success')
+    return redirect(url_for('home'))
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():

@@ -42,9 +42,10 @@
         </div>
     </fieldset>
     <div class="form-group">
-      {{ form.submit(class="btn btn-outline-dark") }}
+      {{ form.submit(class="btn btn-outline-info mr-2") }}
+        or <a href="{{ url_for('face_login') }}" class="ml-2  btn-outline-info">Face Login</a>
     </div>
-    <small class="text-muted ml-2">
+    <small class="text-muted ml-2 ">
         <a href="#">Forgot Password?</a>
     </small>
   </form>
