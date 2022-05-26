@@ -75,6 +75,10 @@ def login():
 @app.route('/face_login_setup', methods=['POST', 'GET'])
 @login_required
 def face_login_setup():
+    id = current_user.id
+    user_img = str(id) + '.jpg'
+    current_user.image_file = user_img
+    db.session.commit()
     return render_template('face_login_setup.html')
 
 @app.route('/video_feed', methods=['POST', 'GET'])
@@ -82,6 +86,13 @@ def face_login_setup():
 def video_feed():
     cam = cv2.VideoCapture(0)
     return Response(generate_img(cam, current_user.id,foldername='profile_pics'), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/stop', methods=['POST', 'GET'])
+@login_required
+def stop():
+    flash('Image successfully captured! You can now Login using Face Login.', 'success')
+    return redirect(url_for('home'))
 
 @app.route('/video_feed_login/<user_email>', methods=['POST', 'GET'])
 def video_feed_login(user_email):
@@ -102,8 +113,11 @@ def face_login():
     form  = FaceLoginForm()
     if form.validate_on_submit():  
         user_email = form.email.data
-        return redirect(url_for('goto_facelogin', user_email= str(user_email))) 
-    
+        user = User.query.filter_by(email=user_email).first()
+        if user.image_file:
+            return redirect(url_for('goto_facelogin', user_email= str(user_email))) 
+        else:
+            flash('Face Login is not Set-up', 'info')
     return render_template('emailpage.html', form=form)
 
 @app.route('/try_face_login/<user_email>')
@@ -137,11 +151,6 @@ def try_face_login(user_email):
             return redirect(url_for('login'))
 
 
-@app.route('/stop', methods=['POST', 'GET'])
-@login_required
-def stop():
-    flash('Image successfully captured! You can now Login using Face Login.', 'success')
-    return redirect(url_for('home'))
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
@@ -196,13 +205,6 @@ def save_convict_picture(form_picture):
 def account():  
     form =  UpdateAccountForm()
     if form.validate_on_submit():
-        if form.picture.data:
-            picture_file  = save_picture(form.picture.data)
-            img = current_user.image_file
-            current_user.image_file  = picture_file
-            loc = "D:\Flask\crimeassist\static\profile_pics"
-            path1 = os.path.join(loc,img)
-            os.remove(path1)
         current_user.username = form.username.data
         current_user.email = form.email.data
         if form.password.data and form.confirm_password.data:
