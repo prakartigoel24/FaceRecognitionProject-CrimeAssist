@@ -81,7 +81,7 @@ class AddConvictForm(FlaskForm):
 
     dob = DateField('Date of Birth',validators=[DataRequired()])
     
-    picture  = FileField('Convict Face Image', validators =[FileAllowed(['jpg','png'])])
+    picture  = FileField('Convict Face Image', validators =[FileAllowed(['jpg'])])
      
     crimes = TextAreaField('Crimes Committed',validators=[DataRequired()] )                    
     submit  = SubmitField('Add Convict')
@@ -105,3 +105,7 @@ class SearchForm(FlaskForm):
 class FaceLoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(),Email()])
     submit  = SubmitField('Submit')
+
+class ConvictSearchForm(FlaskForm):    
+    picture  = FileField('Upload Image', validators =[FileAllowed(['jpg'])])
+    submit  = SubmitField('Search')

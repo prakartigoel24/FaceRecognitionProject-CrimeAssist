@@ -1,4 +1,6 @@
+from calendar import c
 import cv2
+from werkzeug.utils import secure_filename
 import numpy as np
 import os, time
 from datetime import date
@@ -15,24 +17,47 @@ from crimeassist.models import*
 from flask_login import login_user,current_user,logout_user,login_required
 
 user_face_encodings = []
-present_ids = []
+user_ids = []
+
+
+convict_face_encodings = []
+convict_ids = []
+convict_names= []
 
 def generate_user_setup_encoding():
     folder = "D:\Flask\crimeassist\static\profile_pics"
     list_of_images = os.listdir(folder)
 
     for imgName in list_of_images:
-        currImg = face_recognition.load_image_file(f'{folder}/{imgName}')
+        currImg = face_recognition.load_image_file(f'{folder}\{imgName}')
         new_id = imgName.split('.')
-        present_ids.append(new_id[0])
+        user_ids.append(new_id[0])
         img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
         face_locations = face_recognition.face_locations(img)
         if face_locations:
             currImgEncodings = face_recognition.face_encodings(img, face_locations, num_jitters=3, model="large")[0]
             user_face_encodings.append(currImgEncodings)
 
+def generate_convict_encodings():
+    folder = "D:\Flask\crimeassist\static\convict_pics"
+    list_of_images = os.listdir(folder)
+    convict_images = ConvictImage.query.all()
+
+    for images in convict_images:
+        curr_con_id = images.person_id
+        curr_con_img =images.image_file
+        currImg = face_recognition.load_image_file(f'{folder}\{curr_con_img}')
+        convict_ids.append(curr_con_id)
+        con = Convict.query.filter_by(id = curr_con_id).first()
+        convict_names.append(con.name)
+        img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
+        face_locations = face_recognition.face_locations(img)
+        if face_locations:
+            currImgEncodings = face_recognition.face_encodings(img, face_locations)[0]
+            convict_face_encodings.append(currImgEncodings)
 
 generate_user_setup_encoding()
+generate_convict_encodings()
 
 def generate_img(cam, label, foldername):
     while True:
@@ -53,6 +78,23 @@ def generate_img(cam, label, foldername):
             
             yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
+def generate_convict_img(cam,foldername,imghex):
+    while True:
+        # Grab a single frame of video
+        success, frame = cam.read()
+
+        if not success:
+            print("oops ! something went wrong")
+            break
+        else:
+            imgname = str(imghex) + '.jpg'
+            path = os.path.join('crimeassist\static',foldername)
+            path = os.path.join(path, imgname)
+            cv2.imwrite(path, frame)
+            ret, imgbuffer = cv2.imencode('.jpg',frame)
+            frame=imgbuffer.tobytes()
+            
+            yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
      
     
 @app.route('/', methods=['POST', 'GET'])
@@ -137,7 +179,7 @@ def try_face_login(user_email):
         face_distances = face_recognition.face_distance(user_face_encodings, face_encoding)
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:
-            id = present_ids[best_match_index]
+            id = user_ids[best_match_index]
             user = User.query.filter_by(id = id).first()
             if user.email == user_email:
                 login_user(user,remember = True)
@@ -149,7 +191,6 @@ def try_face_login(user_email):
         else:
             flash('Invalid face login. Please login through Email and pass', 'info')
             return redirect(url_for('login'))
-
 
 
 @app.route('/register', methods=['POST', 'GET'])
@@ -177,18 +218,15 @@ def home():
 def logout(): 
     logout_user()
     return redirect(url_for('home'))
-    
 
-def save_convict_picture(form_picture):
-    random_hex = secrets.token_hex(8)
+def save_convict_picture(form_picture, imghex):
     _, f_ext = os.path.splitext(form_picture.filename)
-    picture_fn= random_hex + f_ext
+    picture_fn= imghex + f_ext
     picture_path = os.path.join(app.root_path,'static/convict_pics', picture_fn)
     output_size = (125,125)
     i= Image.open(form_picture)
     i.thumbnail(output_size)
     i.save(picture_path)
-    return picture_fn
 
 @app.route('/account', methods=['POST', 'GET'])
 @login_required
@@ -216,28 +254,29 @@ def account():
     elif request.method =='GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
-    image_file = url_for('static', filename = 'profile_pics/'+ current_user.image_file)
-    return render_template('account.html',title='Account', image_file=image_file , form = form)
+    return render_template('account.html',title='Account', form = form)
 
 @app.route('/addConvict', methods=['POST', 'GET'])
 @login_required
 def addConvict():
     form = AddConvictForm()
+    imghex = secrets.token_hex(8)
+    picture_file  = str(imghex) + '.jpg'
     if form.validate_on_submit():
         if not form.picture.data:
-            flash("Image file required!", 'danger')
+            flash('Image required!', "danger")
         else:
-            picture_file  = save_convict_picture(form.picture.data)
+            save_convict_picture(form.picture.data, imghex)
             newconvict = Convict(name = form.name.data,crimes = form.crimes.data,dob = form.dob.data ,profile_image = picture_file)
             db.session.add(newconvict)
             db.session.commit()
             convImg = ConvictImage(person=newconvict,image_file=picture_file)
             db.session.add(convImg)
             db.session.commit()
+            generate_convict_encodings()
             flash('Convict added successfully!', 'success')  
             return redirect(url_for('showConvicts' , Convict = Convict))  
-    return render_template('addConvict.html',title='Add Convict', form = form)
-
+    return render_template('addConvict.html',title='Add Convict', form = form, imghex=str(imghex))
 
 
 @app.route('/showConvicts', methods=['POST', 'GET'])
@@ -252,11 +291,13 @@ def showConvicts():
 @app.route('/updateConvictInfo/<int:convict_id>', methods=['POST', 'GET'])
 @login_required
 def updateConvictInfo(convict_id):
+    imghex = secrets.token_hex(8)
+    picture_file  = str(imghex) + '.jpg'
     convict = Convict.query.get_or_404(convict_id)
     form = UpdateConvictForm()
     if form.validate_on_submit():
         if form.profile_image.data:
-            picture_file  = save_convict_picture(form.profile_image.data)
+            save_convict_picture(form.profile_image.data, imghex)
             convict.profile_image=picture_file
             img = ConvictImage.query.get_or_404(convict.id)
             loc = "D:\Flask\crimeassist\static\convict_pics"
@@ -267,6 +308,7 @@ def updateConvictInfo(convict_id):
         convict.crimes = form.crimes.data
         convict.dob = form.dob.data
         db.session.commit()
+        generate_convict_encodings()
         flash('Convict info Updated successfully!','success')
         return redirect(url_for('update'))
     elif request.method == 'GET':
@@ -300,8 +342,6 @@ def deleteConvict(convict_id):
     return redirect(url_for('update'))
 
 
-
-
 @app.route('/searchConvict', methods=['POST', 'GET'])
 @login_required
 def searchConvict():
@@ -324,6 +364,44 @@ def searchConvict():
         return render_template('searchConvict.html',form=form,convicts=convicts)
     return render_template('searchConvict.html',form=form)
 
+
+def process_img(img):
+    convicts = []
+    folder = "D:\\Flask\\crimeassist\\static\\uploads"
+    currImg = face_recognition.load_image_file(f'{folder}\{img}')
+    imgrgb = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
+    face_locations = face_recognition.face_locations(imgrgb)
+    if face_locations:
+        currImgEncodings = face_recognition.face_encodings(imgrgb, face_locations)
+        for face_encoding in currImgEncodings:
+            matches = face_recognition.compare_faces(convict_face_encodings, face_encoding)
+            face_distances = face_recognition.face_distance(convict_face_encodings, face_encoding)
+            best_match_index = np.argmin(face_distances)
+            if matches[best_match_index]:
+                id = convict_ids[best_match_index]
+                con = Convict.query.filter_by(id=id).first()
+                convicts.append(con)            
+    os.remove(os.path.join(folder,img))
+    return convicts
+
+def save_pic(form_picture):
+    picture_fn= 'temp.jpg'
+    picture_path = os.path.join(app.root_path,'static/uploads', picture_fn)
+    i= Image.open(form_picture)
+    i.save(picture_path)
+    return picture_fn
+        
+@app.route('/searchUsingMedia', methods=['POST', 'GET'])
+@login_required
+def searchUsingMedia():
+    form = ConvictSearchForm()
+    if form.validate_on_submit():
+        if form.picture.data:
+            i = save_pic(form.picture.data)
+            convicts = process_img(i)
+            return render_template('searchUsingMedia.html',convicts = convicts, form=form)
+                
+    return render_template('searchUsingMedia.html', form=form)
 
 @app.route('/update', methods=['POST', 'GET'])
 @login_required
@@ -349,3 +427,4 @@ def update():
 
 
     return render_template('update.html', form=form,convicts=convicts)
+

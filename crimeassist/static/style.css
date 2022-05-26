@@ -92,12 +92,12 @@ justify-content:center ;
 
 .search-bar{
 
-  width: 260px;
+  width: 300px;
   height: 605px;
   border-radius: 3px;
   margin-bottom: 20px;
   margin-top:30px;
-  margin-left:-130px;
+  margin-left:-150px;
   background: lightblue;
   padding: 10px 20px;
   
