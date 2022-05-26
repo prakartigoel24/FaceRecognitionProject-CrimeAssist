@@ -6,7 +6,7 @@ import os, time
 from datetime import date
 from flask_table import Table, Col
 import secrets
-from PIL import Image
+from PIL import Image,ImageDraw,ImageFont
 import email
 import face_recognition
 from flask import Flask, flash,request, Response
@@ -369,20 +369,34 @@ def process_img(img):
     convicts = []
     folder = "D:\\Flask\\crimeassist\\static\\uploads"
     currImg = face_recognition.load_image_file(f'{folder}\{img}')
+    pil_image = Image.fromarray(currImg)
+    # Create a Pillow ImageDraw Draw instance to draw with
+    draw = ImageDraw.Draw(pil_image)
     imgrgb = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
     face_locations = face_recognition.face_locations(imgrgb)
     if face_locations:
         currImgEncodings = face_recognition.face_encodings(imgrgb, face_locations)
-        for face_encoding in currImgEncodings:
+        for (top, right, bottom, left), face_encoding in zip(face_locations, currImgEncodings):
             matches = face_recognition.compare_faces(convict_face_encodings, face_encoding)
+            name  = 'unknown'
             face_distances = face_recognition.face_distance(convict_face_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
             if matches[best_match_index]:
                 id = convict_ids[best_match_index]
                 con = Convict.query.filter_by(id=id).first()
-                convicts.append(con)            
-    os.remove(os.path.join(folder,img))
-    return convicts
+                name = con.name
+                convicts.append(con)
+            draw.rectangle(((left-10, top-10), (right+7, bottom+7)), outline=(0, 0, 255))
+            font = ImageFont.truetype(r'D:\\arial.ttf', size=12)
+            # Draw a label with a name below the face
+            text_width, text_height = draw.textsize(name)
+            draw.rectangle(((left-10, bottom - text_height+5), (right+6, bottom+7)), fill=(0, 0, 255), outline=(0, 0, 255))
+            draw.text((left + 6, bottom - text_height+5 ), name, fill=(255, 255, 255, 255),font = font) 
+
+    del draw
+    drawnImage=os.path.join(folder,img)
+    pil_image.save(drawnImage)
+    return convicts , img
 
 def save_pic(form_picture):
     picture_fn= 'temp.jpg'
@@ -398,8 +412,8 @@ def searchUsingMedia():
     if form.validate_on_submit():
         if form.picture.data:
             i = save_pic(form.picture.data)
-            convicts = process_img(i)
-            return render_template('searchUsingMedia.html',convicts = convicts, form=form)
+            convicts , drawnImage= process_img(i)
+            return render_template('searchUsingMedia.html',convicts = convicts, form=form, drawnImage=drawnImage)
                 
     return render_template('searchUsingMedia.html', form=form)
 

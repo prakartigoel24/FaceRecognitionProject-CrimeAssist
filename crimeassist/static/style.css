@@ -58,6 +58,11 @@ margin:13px;
   margin-right:500px;
 }
 
+#recog-img{
+ width:600px;
+ height:400px;
+ margin: 200px 350px;
+}
 .video-feed-class{
 
 display:flex;

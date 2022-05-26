@@ -34,7 +34,6 @@
                 {% endif %}  
                 </div> 
 
-                
 <!-- Search results -->
 
     {%  if not convicts  %}
@@ -52,5 +51,9 @@
             </div>
         {% endfor %}
     {%  endif    %}
+
+    {% if drawnImage %}
+      <img id ="recog-img" src="{{ url_for('static',filename = 'uploads/'+ drawnImage ) }}" alt="Photo here">
+    {% endif %}
    
 {% endblock content %}
