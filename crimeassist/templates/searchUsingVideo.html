@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<!-- search bar  -->
+<div class="search-bar">
+    <form action="" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <h4>Upload Video</h4>
+                <input class="form-control mt-3"   type = "file" name = "file" />
+                <input class="form-control mt-2 border-dark"  type = "submit" value="upload"/>
+            </div>
+    </form>
+<!-- Search results -->
+
+    {% if vidname %}
+    <div class="processed-video">
+        <img id="process-frames" src="{{ url_for('process_video' , vidname=vidname) }}" alt="Video feed here">
+        <a class="btn btn-danger vid-btn" href="{{ url_for('upload') }}">STOP</a>
+
+    </div>
+           
+    {% endif %}
+   
+{% endblock content %}

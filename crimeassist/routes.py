@@ -1,4 +1,5 @@
 from calendar import c
+from fileinput import filename
 import cv2
 from werkzeug.utils import secure_filename
 import numpy as np
@@ -33,7 +34,7 @@ def generate_user_setup_encoding():
         new_id = imgName.split('.')
         user_ids.append(new_id[0])
         img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
-        face_locations = face_recognition.face_locations(img)
+        face_locations = face_recognition.face_locations(img, model='large')
         if face_locations:
             currImgEncodings = face_recognition.face_encodings(img, face_locations)[0]
             user_face_encodings.append(currImgEncodings)
@@ -156,10 +157,13 @@ def face_login():
     if form.validate_on_submit():  
         user_email = form.email.data
         user = User.query.filter_by(email=user_email).first()
-        if user.image_file:
-            return redirect(url_for('goto_facelogin', user_email= str(user_email))) 
+        if user:
+            if user.image_file:
+                return redirect(url_for('goto_facelogin', user_email= str(user_email))) 
+            else:
+                flash('Face Login is not Set-up', 'info')
         else:
-            flash('Face Login is not Set-up', 'info')
+            flash('User does not exist with that email!', 'danger')
     return render_template('emailpage.html', form=form)
 
 @app.route('/try_face_login/<user_email>')
@@ -167,7 +171,7 @@ def try_face_login(user_email):
     tryimageloc =f'crimeassist\static\login_user_images\{user_email}.jpg' 
     currImg = face_recognition.load_image_file(tryimageloc)
     img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB) 
-    face_locations = face_recognition.face_locations(img)
+    face_locations = face_recognition.face_locations(img, model='large')
     if face_locations:
         currImgEncodings = face_recognition.face_encodings(img, face_locations)
     else:
@@ -175,7 +179,7 @@ def try_face_login(user_email):
         return redirect(url_for('face_login'))
 
     for face_encoding in currImgEncodings:
-        matches = face_recognition.compare_faces(user_face_encodings, face_encoding,tolerance=0.6)
+        matches = face_recognition.compare_faces(user_face_encodings, face_encoding,tolerance=0.65)
         face_distances = face_recognition.face_distance(user_face_encodings, face_encoding)
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:
@@ -442,3 +446,66 @@ def update():
 
     return render_template('update.html', form=form,convicts=convicts)
 
+def process_vid_gen(vid):
+    process_curr_frame=True
+    while True:
+        # Grab a single frame of video
+        success, frame = vid.read()
+
+        if not success:
+            flash('Something went wrong with the feed ! Try again!' ,'info')
+            break
+        else:
+            # small_frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
+            # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+            rgb_small_frame = frame[:, :, ::-1]            
+            if process_curr_frame:
+                # Find all the faces and face encodings in the current frame of video
+                vid_face_locations = face_recognition.face_locations(frame)
+                vid_face_encodings = face_recognition.face_encodings(rgb_small_frame, vid_face_locations)
+                vid_face_names = []
+
+                for face_encoding in vid_face_encodings:
+                    # See if the face in video feed is a match for the known faces
+                    matches = face_recognition.compare_faces(convict_face_encodings, face_encoding,tolerance=0.6)
+                    name = "Unknown"
+                    # Or instead, use the known face with the smallest distance to the new face
+                    face_distances = face_recognition.face_distance(convict_face_encodings, face_encoding)
+                    best_match_index = np.argmin(face_distances)
+                    if matches[best_match_index]:
+                        name = convict_names[best_match_index]
+                        
+                    vid_face_names.append(name)
+            process_curr_frame= not process_curr_frame
+            # Display the results
+            for (top, right, bottom, left), name in zip(vid_face_locations, vid_face_names):
+                # Draw a box around the face
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+
+                # Draw a label with a name below the face
+                cv2.rectangle(frame, (left, bottom - 10), (right, bottom), (0, 0, 255), cv2.FILLED)
+                font = cv2.FONT_HERSHEY_DUPLEX
+                cv2.putText(frame, name, (left + 6, bottom - 4), font, 0.5, (255, 255, 255), 1)
+
+            ret, imgbuffer = cv2.imencode('.jpg',frame)
+            frame=imgbuffer.tobytes()
+            
+            yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+
+@app.route('/upload', methods = ['GET', 'POST'])
+def upload():
+    if request.method == 'POST':
+      f = request.files['file']
+      fname = secure_filename("tempVid.mp4")
+      f.save(os.path.join('crimeassist/static/uploads',fname))
+      flash('Video uploaded!','success')
+      vidname =  fname
+      return render_template('searchUsingVideo.html', vidname=vidname)
+    
+    return render_template('searchUsingVideo.html')
+
+@app.route('/process_video/<vidname>', methods = ['GET', 'POST'])
+def process_video(vidname):
+    vidobj = cv2.VideoCapture(os.path.join('crimeassist/static/uploads',vidname))
+    return Response(process_vid_gen(vidobj), mimetype='multipart/x-mixed-replace; boundary=frame')

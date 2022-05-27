@@ -7,7 +7,7 @@
     <form action="" method="POST" enctype="multipart/form-data">
       {{ form.hidden_tag() }}
             <div class="form-group">
-            {{ form.picture.label(class="form-control-label") }}
+            <h4>Upload Image</h4>
 
             {% if form.picture.errors %}
               {{ form.picture(class="form-control form-control-md is-invalid") }}
@@ -33,13 +33,13 @@
                   {{ form.submit(class="form-control form-control-md border-dark") }}
                 {% endif %}  
                 </div> 
-
+    </form>
 <!-- Search results -->
 
     {%  if not convicts  %}
         <div class="search-convicts">
             <h3 class="bg-primary"> No search results </h3>
-            <p> Kindly search with another keyword.</p>
+            <p> Kindly search with another Image.</p>
         </div>  
     {% else %}
         {% for convict in convicts %} 

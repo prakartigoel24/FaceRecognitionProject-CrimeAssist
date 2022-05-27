@@ -63,12 +63,32 @@ margin:13px;
  height:400px;
  margin: 200px 350px;
 }
+#process-frames{
+  width:800px;
+    height:600px;
+    margin: -180px 380px;
+    border: 2px solid black;
+}
+.vid-btn{
+
+  width:100px;
+  position: relative;
+  margin:0px 390px;
+  margin-top:200px;
+
+}
+.processed_vid{
+    width:800px;
+    height:600px;
+    margin: 200px 350px;
+}
 .video-feed-class{
 
 display:flex;
 margin: 25px 50px;
 justify-content:center ;  
 }
+
 
 .search-convicts {
   width:500px;
