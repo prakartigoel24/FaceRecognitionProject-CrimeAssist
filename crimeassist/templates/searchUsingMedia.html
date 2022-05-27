@@ -12,7 +12,7 @@
             {% if form.picture.errors %}
               {{ form.picture(class="form-control form-control-md is-invalid") }}
               <div class="invalid-feedback">
-                {% for error in form.search.errors %}
+                {% for error in form.picture.errors %}
                   <span>{{ error }}</span>
                 {% endfor %}
               </div>

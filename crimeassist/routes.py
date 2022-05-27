@@ -35,7 +35,7 @@ def generate_user_setup_encoding():
         img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
         face_locations = face_recognition.face_locations(img)
         if face_locations:
-            currImgEncodings = face_recognition.face_encodings(img, face_locations, num_jitters=3, model="large")[0]
+            currImgEncodings = face_recognition.face_encodings(img, face_locations)[0]
             user_face_encodings.append(currImgEncodings)
 
 def generate_convict_encodings():
@@ -51,7 +51,7 @@ def generate_convict_encodings():
         con = Convict.query.filter_by(id = curr_con_id).first()
         convict_names.append(con.name)
         img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
-        face_locations = face_recognition.face_locations(img)
+        face_locations = face_recognition.face_locations(img, model='large')
         if face_locations:
             currImgEncodings = face_recognition.face_encodings(img, face_locations)[0]
             convict_face_encodings.append(currImgEncodings)
@@ -169,13 +169,13 @@ def try_face_login(user_email):
     img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB) 
     face_locations = face_recognition.face_locations(img)
     if face_locations:
-        currImgEncodings = face_recognition.face_encodings(img, face_locations, num_jitters=3, model="large")
+        currImgEncodings = face_recognition.face_encodings(img, face_locations)
     else:
         flash(' Face not detected ! Try again.', 'info')
         return redirect(url_for('face_login'))
 
     for face_encoding in currImgEncodings:
-        matches = face_recognition.compare_faces(user_face_encodings, face_encoding,tolerance=0.3)
+        matches = face_recognition.compare_faces(user_face_encodings, face_encoding,tolerance=0.6)
         face_distances = face_recognition.face_distance(user_face_encodings, face_encoding)
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:
@@ -373,11 +373,11 @@ def process_img(img):
     # Create a Pillow ImageDraw Draw instance to draw with
     draw = ImageDraw.Draw(pil_image)
     imgrgb = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
-    face_locations = face_recognition.face_locations(imgrgb)
+    face_locations = face_recognition.face_locations(imgrgb, model='large')
     if face_locations:
         currImgEncodings = face_recognition.face_encodings(imgrgb, face_locations)
         for (top, right, bottom, left), face_encoding in zip(face_locations, currImgEncodings):
-            matches = face_recognition.compare_faces(convict_face_encodings, face_encoding)
+            matches = face_recognition.compare_faces(convict_face_encodings, face_encoding, tolerance=0.64)
             name  = 'unknown'
             face_distances = face_recognition.face_distance(convict_face_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
@@ -387,10 +387,10 @@ def process_img(img):
                 name = con.name
                 convicts.append(con)
             draw.rectangle(((left-10, top-10), (right+7, bottom+7)), outline=(0, 0, 255))
-            font = ImageFont.truetype(r'D:\\arial.ttf', size=12)
+            font = ImageFont.truetype('arial.ttf', size=20)
             # Draw a label with a name below the face
             text_width, text_height = draw.textsize(name)
-            draw.rectangle(((left-10, bottom - text_height+5), (right+6, bottom+7)), fill=(0, 0, 255), outline=(0, 0, 255))
+            draw.rectangle(((left-10, bottom - text_height+1), (right+6, bottom+15)), fill=(0, 0, 255), outline=(0, 0, 255))
             draw.text((left + 6, bottom - text_height+5 ), name, fill=(255, 255, 255, 255),font = font) 
 
     del draw
