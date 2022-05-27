@@ -12,10 +12,12 @@ import email
 import face_recognition
 from flask import Flask, flash,request, Response
 from flask import redirect,url_for,render_template,request
-from crimeassist import app,db,bcrypt
+from crimeassist import app,db,bcrypt, mail
 from crimeassist.forms import*
 from crimeassist.models import*
 from flask_login import login_user,current_user,logout_user,login_required
+from flask_mail import Message
+
 
 user_face_encodings = []
 user_ids = []
@@ -34,7 +36,7 @@ def generate_user_setup_encoding():
         new_id = imgName.split('.')
         user_ids.append(new_id[0])
         img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
-        face_locations = face_recognition.face_locations(img, model='large')
+        face_locations = face_recognition.face_locations(img)
         if face_locations:
             currImgEncodings = face_recognition.face_encodings(img, face_locations)[0]
             user_face_encodings.append(currImgEncodings)
@@ -171,7 +173,7 @@ def try_face_login(user_email):
     tryimageloc =f'crimeassist\static\login_user_images\{user_email}.jpg' 
     currImg = face_recognition.load_image_file(tryimageloc)
     img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB) 
-    face_locations = face_recognition.face_locations(img, model='large')
+    face_locations = face_recognition.face_locations(img)
     if face_locations:
         currImgEncodings = face_recognition.face_encodings(img, face_locations)
     else:
@@ -179,7 +181,7 @@ def try_face_login(user_email):
         return redirect(url_for('face_login'))
 
     for face_encoding in currImgEncodings:
-        matches = face_recognition.compare_faces(user_face_encodings, face_encoding,tolerance=0.65)
+        matches = face_recognition.compare_faces(user_face_encodings, face_encoding,tolerance=0.7)
         face_distances = face_recognition.face_distance(user_face_encodings, face_encoding)
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:
@@ -509,3 +511,46 @@ def upload():
 def process_video(vidname):
     vidobj = cv2.VideoCapture(os.path.join('crimeassist/static/uploads',vidname))
     return Response(process_vid_gen(vidobj), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = Message('Password Reset Request',
+                  sender='noreply@demo.com',
+                  recipients=[user.email])
+    msg.body = f'''To reset your password, visit the following link:
+{url_for('reset_token', token=token, _external=True)}
+If you did not make this request then simply ignore this email and no changes will be made.
+'''
+    mail.send(msg)
+
+
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RequestResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        send_reset_email(user)
+        flash('An email has been sent with instructions to reset your password.', 'info')
+        return redirect(url_for('login'))
+    return render_template('reset_request.html', title='Reset Password', form=form)
+
+
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    user = User.verify_reset_token(token)
+    if user is None:
+        flash('That is an invalid or expired token', 'warning')
+        return redirect(url_for('reset_request'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user.password = hashed_password
+        db.session.commit()
+        flash('Your password has been updated! You are now able to log in', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_token.html', title='Reset Password', form=form)
