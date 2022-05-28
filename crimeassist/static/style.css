@@ -1,12 +1,18 @@
 body {
-  background-image:url("https://media.istockphoto.com/photos/digital-cyberspace-with-particles-and-digital-data-network-high-picture-id1302189748?b=1&k=20&m=1302189748&s=170667a&w=0&h=s0o2dhTh40lrWLPt6rg54S0jCUywkr6h04rDdfStMq8=");
+  background:url("bgimg.jpg");
   color: #333333;
+  background-repeat: no-repeat;
+  width:100%;
+  height:100%;
 }
 
 h1, h2, h3, h4, h5, h6 {
   color: #444444;
 }
 
+.homecards{
+  height:17.5rem;
+}
 .homebtns{
 margin:13px;
 }

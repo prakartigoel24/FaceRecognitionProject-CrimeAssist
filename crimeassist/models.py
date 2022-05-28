@@ -42,16 +42,6 @@ class Convict(db.Model):
     dob = db.Column(db.Date ,nullable = False)
     profile_image = db.Column(db.String(20),nullable=False)
     crimes = db.Column(db.Text,nullable=False)
-    images = db.relationship('ConvictImage', backref = 'person', lazy=True)
 
     def __repr__(self):
         return f"Convict('{self.name}', '{self.crimes}','{self.dob}', '{self.profile_image}')"
-
-
-class ConvictImage(db.Model):
-    id = db.Column(db.Integer,primary_key=True)
-    person_id = db.Column(db.Integer,db.ForeignKey('convict.id'),nullable=False)
-    image_file = db.Column(db.String(20),nullable=False)
-
-    def __repr__(self):
-        return f"ConvictImage('{self.person_id}','{self.image_file}')"

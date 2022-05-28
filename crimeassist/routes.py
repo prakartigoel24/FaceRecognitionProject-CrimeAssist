@@ -21,43 +21,50 @@ from flask_mail import Message
 
 user_face_encodings = []
 user_ids = []
-
-
 convict_face_encodings = []
 convict_ids = []
 convict_names= []
 
 def generate_user_setup_encoding():
+    user_face_encodings.clear()
+    user_ids.clear()
     folder = "D:\Flask\crimeassist\static\profile_pics"
     list_of_images = os.listdir(folder)
 
     for imgName in list_of_images:
         currImg = face_recognition.load_image_file(f'{folder}\{imgName}')
         new_id = imgName.split('.')
-        user_ids.append(new_id[0])
         img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
         face_locations = face_recognition.face_locations(img)
         if face_locations:
             currImgEncodings = face_recognition.face_encodings(img, face_locations)[0]
             user_face_encodings.append(currImgEncodings)
+            user_ids.append(new_id[0])
+    print(user_ids)
 
 def generate_convict_encodings():
+    convict_face_encodings.clear()
+    convict_ids.clear()
+    convict_names.clear()
     folder = "D:\Flask\crimeassist\static\convict_pics"
     list_of_images = os.listdir(folder)
-    convict_images = ConvictImage.query.all()
+    convicts = Convict.query.all()
 
-    for images in convict_images:
-        curr_con_id = images.person_id
-        curr_con_img =images.image_file
+    for con in convicts:
+        curr_con_id = con.id
+        curr_con_img =con.profile_image
         currImg = face_recognition.load_image_file(f'{folder}\{curr_con_img}')
-        convict_ids.append(curr_con_id)
-        con = Convict.query.filter_by(id = curr_con_id).first()
-        convict_names.append(con.name)
         img = cv2.cvtColor(currImg, cv2.COLOR_BGR2RGB)
-        face_locations = face_recognition.face_locations(img, model='large')
-        if face_locations:
-            currImgEncodings = face_recognition.face_encodings(img, face_locations)[0]
+        face_locations = face_recognition.face_locations(img)
+        if face_locations:       
+            currImgEncodings = face_recognition.face_encodings(img)[0]
             convict_face_encodings.append(currImgEncodings)
+            convict_ids.append(curr_con_id)
+            convict_names.append(con.name)
+    print(convict_ids)
+    print(convict_names)
+    print(len(convict_face_encodings))
+
 
 generate_user_setup_encoding()
 generate_convict_encodings()
@@ -136,6 +143,7 @@ def video_feed():
 @app.route('/stop', methods=['POST', 'GET'])
 @login_required
 def stop():
+    generate_user_setup_encoding()
     flash('Image successfully captured! You can now Login using Face Login.', 'success')
     return redirect(url_for('home'))
 
@@ -181,7 +189,7 @@ def try_face_login(user_email):
         return redirect(url_for('face_login'))
 
     for face_encoding in currImgEncodings:
-        matches = face_recognition.compare_faces(user_face_encodings, face_encoding,tolerance=0.7)
+        matches = face_recognition.compare_faces(user_face_encodings, face_encoding,tolerance=0.6)
         face_distances = face_recognition.face_distance(user_face_encodings, face_encoding)
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:
@@ -276,9 +284,6 @@ def addConvict():
             newconvict = Convict(name = form.name.data,crimes = form.crimes.data,dob = form.dob.data ,profile_image = picture_file)
             db.session.add(newconvict)
             db.session.commit()
-            convImg = ConvictImage(person=newconvict,image_file=picture_file)
-            db.session.add(convImg)
-            db.session.commit()
             generate_convict_encodings()
             flash('Convict added successfully!', 'success')  
             return redirect(url_for('showConvicts' , Convict = Convict))  
@@ -304,12 +309,11 @@ def updateConvictInfo(convict_id):
     if form.validate_on_submit():
         if form.profile_image.data:
             save_convict_picture(form.profile_image.data, imghex)
-            convict.profile_image=picture_file
-            img = ConvictImage.query.get_or_404(convict.id)
+            img = convict.profile_image
             loc = "D:\Flask\crimeassist\static\convict_pics"
-            path1 = os.path.join(loc,img.image_file)
+            path1 = os.path.join(loc,img)
             os.remove(path1)
-            img.image_file = picture_file            
+            convict.profile_image=picture_file        
         convict.name = form.name.data
         convict.crimes = form.crimes.data
         convict.dob = form.dob.data
@@ -322,27 +326,19 @@ def updateConvictInfo(convict_id):
         form.crimes.data  =convict.crimes
         form.dob.data =convict.dob
         form.profile_image.data =convict.profile_image
-    return render_template('updateConvictInfo.html',title='Update Info', form=form)
 
+    return render_template('updateConvictInfo.html',title='Update Info', form=form)
 
 @app.route('/deleteConvict/<int:convict_id>', methods=['POST', 'GET'])
 @login_required
 def deleteConvict(convict_id):
     convict = Convict.query.get_or_404(convict_id)
-    convict_img = ConvictImage.query.get_or_404(convict.id)
     db.session.delete(convict)
-    db.session.delete(convict_img)
-    img1 = convict_img.image_file
-    img2 = convict.profile_image
+    img1 = convict.profile_image
     loc = "D:\Flask\crimeassist\static\convict_pics"
-    if img1 == img2 :
-        path1 = os.path.join(loc,img1)
-        os.remove(path1)
-    else:
-        path1 = os.path.join(loc,img1)
-        os.remove(path1)
-        path2 = os.path.join(loc,img2)
-        os.remove(path2)
+    path1 = os.path.join(loc,img1)
+    os.remove(path1)
+    generate_convict_encodings()
     db.session.commit() 
     flash('Convict Profile Deleted successfully!','success')
     return redirect(url_for('update'))
@@ -383,7 +379,7 @@ def process_img(img):
     if face_locations:
         currImgEncodings = face_recognition.face_encodings(imgrgb, face_locations)
         for (top, right, bottom, left), face_encoding in zip(face_locations, currImgEncodings):
-            matches = face_recognition.compare_faces(convict_face_encodings, face_encoding, tolerance=0.64)
+            matches = face_recognition.compare_faces(convict_face_encodings, face_encoding, tolerance=0.6)
             name  = 'unknown'
             face_distances = face_recognition.face_distance(convict_face_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
@@ -455,7 +451,7 @@ def process_vid_gen(vid):
         success, frame = vid.read()
 
         if not success:
-            flash('Something went wrong with the feed ! Try again!' ,'info')
+            print('OOPS SOMETHING WENT WRONG!')
             break
         else:
             # small_frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)

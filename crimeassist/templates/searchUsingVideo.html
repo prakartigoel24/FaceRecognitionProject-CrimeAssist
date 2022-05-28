@@ -17,9 +17,12 @@
     <div class="processed-video">
         <img id="process-frames" src="{{ url_for('process_video' , vidname=vidname) }}" alt="Video feed here">
         <a class="btn btn-danger vid-btn" href="{{ url_for('upload') }}">STOP</a>
-
     </div>
-           
+    {% else %}
+    <div class="search-convicts mt-0">
+        <h3 class="bg-primary"> No video uploaded </h3>
+        <p> Kindly Upload a Video to start searching. </p>
+    </div>   
     {% endif %}
    
 {% endblock content %}
