@@ -1,7 +1,7 @@
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer # For token generation
 from datetime import datetime
 from email.policy import default
-from flask_login import UserMixin
+from flask_login import UserMixin # To handle user login sessions
 from crimeassist import db, login_manager, app
 
 
@@ -9,7 +9,7 @@ from crimeassist import db, login_manager, app
 def load_user(user_id):
     return User.query.get(user_id)
 
-
+# <<<<<<<<<<<<<<<   USER MODEL >>>>>>>>>>>>>>>>> #
 class User(db.Model,UserMixin):
     id = db.Column(db.Integer,primary_key=True)
     username = db.Column(db.String(20),unique=True,nullable=False)
@@ -17,7 +17,7 @@ class User(db.Model,UserMixin):
     image_file = db.Column(db.String(20),default = None)
     password = db.Column(db.String(60),nullable = False)
 
-
+    # Generates a token ( valid for 30 mins ).
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(app.config['SECRET_KEY'], expires_sec)
         return s.dumps({'user_id': self.id}).decode('utf-8')
@@ -35,6 +35,7 @@ class User(db.Model,UserMixin):
     def __repr__(self):
         return f"User('{self.username}','{self.email}','{self.image_file}')"
 
+# <<<<<<<<<<<<<<< CONVICT MODEL >>>>>>>>>>>>>>>>> #
 
 class Convict(db.Model):
     id = db.Column(db.Integer,primary_key=True)

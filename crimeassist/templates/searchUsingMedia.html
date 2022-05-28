@@ -8,29 +8,27 @@
       {{ form.hidden_tag() }}
             <div class="form-group">
             <h4>Upload Image</h4>
-
             {% if form.picture.errors %}
               {{ form.picture(class="form-control form-control-md is-invalid") }}
-              <div class="invalid-feedback">
-                {% for error in form.picture.errors %}
-                  <span>{{ error }}</span>
-                {% endfor %}
-              </div>
+                <div class="invalid-feedback">
+                  {% for error in form.picture.errors %}
+                    <span>{{ error }}</span>
+                  {% endfor %}
+                </div>
             {% else %}
-              {{ form.picture(class="form-control form-control-md border-dark") }}
+                {{ form.picture(class="form-control form-control-md border-dark") }}
             {% endif %}  
             </div> 
-
             <div class="form-group">
                 {% if form.submit.errors %}
                   {{ form.submit(class="form-control form-control-md is-invalid") }}
-                  <div class="invalid-feedback">
-                    {% for error in form.submit.errors %}
-                      <span>{{ error }}</span>
-                    {% endfor %}
-                  </div>
+                    <div class="invalid-feedback">
+                      {% for error in form.submit.errors %}
+                        <span>{{ error }}</span>
+                      {% endfor %}
+                    </div>
                 {% else %}
-                  {{ form.submit(class="form-control form-control-md border-dark") }}
+                    {{ form.submit(class="form-control form-control-md border-dark") }}
                 {% endif %}  
                 </div> 
     </form>

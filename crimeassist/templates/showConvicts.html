@@ -1,43 +1,27 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h2 class="bg-white border-primary mt-3 mb-3 p-2"> Total Convicts : {{ Convict.query.count() }}</h2>
-{% for convict in convicts.items %} 
-<div class="show-convicts">
-    <h3 class="bg-primary">{{ convict.name }} <h5 class="bg-success">[ID - {{ convict.id }} ]</h5></h3>
-    <h6>D.O.B - ( {{ convict.dob }} )</h6>
-    <p>Crimes -[ {{ convict.crimes }} ]</p>
-    <img src="{{ url_for('static',filename = 'convict_pics/'+ convict.profile_image ) }}" alt="Photo here">
-    <!-- <a href="{{ url_for('updateConvictInfo',convict_id = convict.id)  }}" class="btn btn-info ml-5"> Update</a> -->
-    <!-- <a href="{{ url_for('deleteConvict',convict_id = convict.id)  }}" class="btn btn-danger ml-5"  onclick="return deleteConFunc();"> Delete </a> -->
-</div>
-{% endfor %}
-{% for page_num in convicts.iter_pages(left_edge=1,right_edge=1, left_current=1,right_current=2) %} 
+    <h2 class="bg-white border-primary mt-3 mb-3 p-2"> Total Convicts : {{ Convict.query.count() }}</h2>
+    {% for convict in convicts.items %} 
+        <div class="show-convicts">
+            <h3 class="bg-primary">{{ convict.name }} <h5 class="bg-success">[ID - {{ convict.id }} ]</h5></h3>
+            <h6>D.O.B - ( {{ convict.dob }} )</h6>
+            <p>Crimes -[ {{ convict.crimes }} ]</p>
+            <img src="{{ url_for('static',filename = 'convict_pics/'+ convict.profile_image ) }}" alt="Photo here">
+        </div>
+    {% endfor %}
+    {% for page_num in convicts.iter_pages(left_edge=1,right_edge=1, left_current=1,right_current=2) %} 
 
-    {%  if page_num  %} 
-        {% if convicts.page == page_num %}
-             <a class = "btn btn-light mb-5" href="{{ url_for('showConvicts',page=page_num)  }}">{{ page_num }}</a>
+        {%  if page_num  %} 
+            {% if convicts.page == page_num %}
+                <a class = "btn btn-light mb-5" href="{{ url_for('showConvicts',page=page_num)  }}">{{ page_num }}</a>
+            {% else  %}
+                <a class = "btn btn-outline-light mb-5" href="{{ url_for('showConvicts',page=page_num)  }}">{{ page_num }}</a>
+            {% endif %}
         {% else  %}
-            <a class = "btn btn-outline-light mb-5" href="{{ url_for('showConvicts',page=page_num)  }}">{{ page_num }}</a>
+            ...
         {% endif %}
-    {% else  %}
-        ...
-    {% endif %}
 
-{% endfor %}
-<!-- 
-{% block javascript %}
-<script>
+    {% endfor %}
 
-    function deleteConFunc()
-    {
-        if (confirm("Confirm delete ? ") == true) {
-            return true;
-        }
-        else{
-            return false;
-        }
-    }
-</script>
-{% endblock javascript %} -->
 {% endblock content %}

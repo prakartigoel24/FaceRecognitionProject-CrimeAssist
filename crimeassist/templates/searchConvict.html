@@ -10,38 +10,38 @@
         <div class="form-group">
             {% if form.search_using.errors %}
               {{ form.search_using(class="form-control form-control-md is-invalid") }}
-              <div class="invalid-feedback">
-                {% for error in form.search_using.errors %}
-                  <span>{{ error }}</span>
-                {% endfor %}
-              </div>
+                <div class="invalid-feedback">
+                  {% for error in form.search_using.errors %}
+                    <span>{{ error }}</span>
+                  {% endfor %}
+                </div>
             {% else %}
-              {{ form.search_using(class="form-control form-control-md border-dark") }}
+                {{ form.search_using(class="form-control form-control-md border-dark") }}
             {% endif %}  
             </div> 
           <div class="form-group">
             {% if form.search.errors %}
               {{ form.search(class="form-control form-control-md is-invalid") }}
-              <div class="invalid-feedback">
-                {% for error in form.search.errors %}
-                  <span>{{ error }}</span>
-                {% endfor %}
-              </div>
+                <div class="invalid-feedback">
+                  {% for error in form.search.errors %}
+                    <span>{{ error }}</span>
+                  {% endfor %}
+                </div>
             {% else %}
-              {{ form.search(class="form-control form-control-md border-dark") }}
+                {{ form.search(class="form-control form-control-md border-dark") }}
             {% endif %}  
             </div> 
 
             <div class="form-group">
                 {% if form.submit.errors %}
                   {{ form.submit(class="form-control form-control-md is-invalid") }}
-                  <div class="invalid-feedback">
-                    {% for error in form.submit.errors %}
-                      <span>{{ error }}</span>
-                    {% endfor %}
-                  </div>
+                    <div class="invalid-feedback">
+                      {% for error in form.submit.errors %}
+                        <span>{{ error }}</span>
+                      {% endfor %}
+                    </div>
                 {% else %}
-                  {{ form.submit(class="form-control form-control-md border-dark") }}
+                    {{ form.submit(class="form-control form-control-md border-dark") }}
                 {% endif %}  
                 </div> 
 

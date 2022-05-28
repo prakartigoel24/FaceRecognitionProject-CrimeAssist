@@ -1,7 +1,6 @@
 body {
   background:url("bgimg.jpg");
   color: #333333;
-  background-repeat: no-repeat;
   width:100%;
   height:100%;
 }
@@ -52,6 +51,19 @@ margin:13px;
   font-weight: 500;
 }
 
+
+#recog-img{
+  width:600px;
+  height:400px;
+  margin: 200px 350px;
+ }
+ #process-frames{
+   width:800px;
+     height:600px;
+     margin: -180px 380px;
+     border: 2px solid black;
+ }
+
 .content-section {
   width:700px;
   background: lightblue;
@@ -64,17 +76,6 @@ margin:13px;
   margin-right:500px;
 }
 
-#recog-img{
- width:600px;
- height:400px;
- margin: 200px 350px;
-}
-#process-frames{
-  width:800px;
-    height:600px;
-    margin: -180px 380px;
-    border: 2px solid black;
-}
 .vid-btn{
 
   width:100px;
@@ -107,7 +108,6 @@ justify-content:center ;
   margin-left:450px;
   margin-top:-195px;
 }
-
 
 .show-convicts {
   width:500px;
