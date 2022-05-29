@@ -61,7 +61,7 @@ This App focuses on storing, manipulating and searching Convict Records in the D
 
 5. Open the project folder in your IDE .
 
-6. Install the required packages from the 'requirements.txt' file by running the `pip install -r requirements.txt` command on your IDE's terminal.
+6. Install cmake using `pip install cmake` on your terminal and then install the required packages from the 'requirements.txt' file by running the `pip install -r requirements.txt` command on your IDE's terminal.
             
 7. Run the python file named - **`run.py`**
 
