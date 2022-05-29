@@ -5,8 +5,9 @@ This is a Web based App integrated with the Facial-Recognition Technology.
 
 This App focuses on storing, manipulating and searching Convict Records in the Database with the help of Face Recognition to identify and get the details of convicts.
 
-*Checkout RecordedSteps file to see the App demo as screenshots.
-*Checkout the VideoDemo link to see the video demo of this App.
+*Checkout **RecordedSteps** file to see the App demo as screenshots.*
+
+*Checkout the **VideoDemo** link to see the video demo of this App.*
 
 ## Features of this Web-App
 
