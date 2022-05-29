@@ -38,6 +38,16 @@ This App focuses on storing, manipulating and searching Convict Records in the D
 
 # Steps To Run This Project On Your Device : #
 
+-> **For installing Face-Recognition library on Mac or Linux :**  
+            
+ - Install dlib with Python bindings [refer this link]( https://gist.github.com/ageitgey/629d75c1baac34dfa5ca2a1928a7aeaf)
+ - Then, make sure you have cmake installed: `brew install cmake`
+
+ - Finally, install this module from pypi using pip3 (or pip2 for Python 2): `pip3 install face_recognition`
+  
+  
+ -> **For Running on Windows follow the steps below -**  
+
 1. Install python-3.8 (64 bit) or above from 'https://www.python.org/downloads/' and add the PATH to your USER and System Variables under Environment variables. 
 
 2. Install VISUAL STUDIO Community Edition  from 'https://visualstudio.microsoft.com/downloads/' and install plugins for PYTHON development and C++ Desktop Development (important).
