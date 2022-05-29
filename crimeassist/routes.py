@@ -259,7 +259,7 @@ def login():
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
-            flash('login succesful!', 'success')
+            flash('Welcome Admin!', 'success')
             return redirect(next_page) if next_page else redirect(url_for('home'))
         else:
             flash('login unsuccesful! Please check email and password.', 'danger')
@@ -421,7 +421,7 @@ def try_face_login(user_email):
             # If match is found, Logs in the User.
             if user.email == user_email:
                 login_user(user, remember=True)
-                flash('Login successful!', 'success')
+                flash('Welcome Admin!', 'success')
                 return redirect(url_for('home'))
             else:
                 flash('Face match invalid, please login through Email and pass', 'info')
