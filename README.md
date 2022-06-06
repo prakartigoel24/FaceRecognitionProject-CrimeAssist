@@ -7,7 +7,7 @@ This App focuses on storing, manipulating and searching Convict Records in the D
 
 *Download and open the **RecordedSteps** file to see the App demo as screenshots.*
 
-*Checkout the **VideoDemo** link to see the video demo of this App.*
+*Checkout the [**VideoDemo**](https://youtu.be/PITixMA5UqU) link to see the video demo of this App.*
 
 ## Features of this Web-App
 
