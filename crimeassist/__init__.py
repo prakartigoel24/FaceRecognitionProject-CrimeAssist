@@ -27,8 +27,8 @@ login_manager.login_message_category = 'info'
 app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'xaviermerlinxavier@gmail.com'   # Testing Email
-app.config['MAIL_PASSWORD'] = 'Xaviermerlinxavier2024'         # Testing Email Password
+app.config['MAIL_USERNAME'] = 'youremail@gmail.com'   # Testing Email
+app.config['MAIL_PASSWORD'] = 'yourpassword'         # Testing Email Password
 mail = Mail(app)
 
 
